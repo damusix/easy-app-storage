@@ -1,9 +1,8 @@
 # Simple JSON local storage wrapper
 
-Why? Because semantic, simple, and non-clashing.
-I have yet to find anything that's easy, functional, and non-verbose, so I made this package.
+Why? Because semantic, simple, no-deps, and non-clashing. I have yet to find anything that's easy, functional, and non-verbose at the same time, so I made this package.
 
-Supports namespaced keys. Package is distributed as-is, meant to be used in modern browsers, or in build tools that compile ES2017 or greater. Basically, if your node / transpiler supports spread operators, this package should be no problem.
+Features include namespacing and utiltiy functions such as `assign`, `each` and `map`.
 
 # Usage
 
