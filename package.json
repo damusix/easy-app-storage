@@ -1,0 +1,19 @@
+{
+  "name": "better-web-storage",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "open test.html",
+    "build": "webpack --config webpack.build.js"
+  },
+  "keywords": [],
+  "author": "Danilo Alonso",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "webpack": "^4.29.3",
+    "webpack-cli": "^3.2.3"
+  }
+}
