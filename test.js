@@ -271,10 +271,20 @@ describe('BetterWebStorage', () => {
 
             store.set(str);
 
-            const map = store.map((key, val) => {
+            const map = store
+                .map((key, val) => {
 
-                return { [key]: val };
-            });
+                    return [key, val];
+                })
+                .sort(function(a, b){
+                    if(a[0] < b[0]) { return -1; }
+                    if(a[0] > b[0]) { return 1; }
+                    return 0;
+                })
+                .map(([key, val]) => {
+
+                    return { [key]: val };
+                });
 
             expect(map[0]).to.include({ a: str.a });
             expect(map[1]).to.include({ b: str.b });
