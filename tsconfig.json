@@ -1,13 +1,25 @@
 {
+    "ts-node": {
+        "compilerOptions": {
+            "target": "ESNext",
+            "lib": ["DOM", "ESNext"],
+            "module": "CommonJS",
+            "moduleResolution": "node",
+            "resolveJsonModule": true
+        }
+    },
     "compilerOptions": {
         "outDir": "build",
         "target": "ESNext",
-        "module": "CommonJS",
-        "lib": ["ESNext", "DOM"],
-        "resolveJsonModule": true,
-        "strict": true
+        "module": "ESNext",
+        "lib": ["DOM", "ESNext"],
+        "strict": true,
+        "declaration": true,
+        "paths": {
+            "pkg": ["./package.json"]
+        }
     },
     "include": [
         "src/*"
-    ]
+    ],
 }

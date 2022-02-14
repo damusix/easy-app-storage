@@ -1,6 +1,4 @@
-import { version } from '../package.json';
-
-class AppStorageError extends Error {};
+class StorageError extends Error {};
 
 interface StorageImplementation {
     getItem(K: string): string | null | Promise<string | null>
@@ -11,14 +9,13 @@ interface StorageImplementation {
 }
 
 type JsonStringifyable = (
-    object | string | boolean |
-    null | JsonStringifyable[] | number |
-    { [K: string]: JsonStringifyable }
+    null | number | string | boolean |
+    JsonStringifyable[] | { [k:string]: JsonStringifyable }
 )
 
 export class AppStorage {
 
-    version = version;
+    version = "%VERSION%";
     readonly storage: StorageImplementation;
     readonly prefix?: string
 
@@ -27,15 +24,36 @@ export class AppStorage {
      */
     remove: AppStorage['rm'];
 
+    /** Same as storage.clear() */
+    reset: AppStorage['clear'];
+
     constructor(storage: StorageImplementation, prefix?: string) {
 
         this.storage = storage;
         this.prefix = prefix
 
         this.remove = this.rm;
+        this.reset = this.clear;
     }
 
-    async get <T extends JsonStringifyable = JsonStringifyable>(keyOrKeys?: string | string[]): Promise<T> {
+    /**
+     * Returns an object of all keys
+     */
+    async get <T extends JsonStringifyable = JsonStringifyable>(): Promise<T extends object ? T : Record<string, T>>
+
+    /**
+     * Returns a single value from storage
+     * @param key key to find
+     */
+    async get <T extends JsonStringifyable = JsonStringifyable>(key: string): Promise<T>
+
+    /**
+     * Returns an object of the keys passed
+     * @param keys keys to find
+     */
+    async get <T extends JsonStringifyable = JsonStringifyable>(keys: string[]): Promise<T extends object ? T : Record<string, T>>
+
+    async get (keyOrKeys?: any) {
 
         if (keyOrKeys === undefined) {
 
@@ -51,7 +69,7 @@ export class AppStorage {
                 entries.push([key, await this.get(key)]);
             }
 
-            return Object.fromEntries(entries) as T;
+            return Object.fromEntries(entries);
         }
 
         return JSON.parse(
@@ -61,7 +79,20 @@ export class AppStorage {
         );
     }
 
-    async set(key: string | object, value: any) {
+    /**
+     * Saves entire object by `{ key: value }`
+     * @param values object to save to storage
+     */
+    async set(values: object): Promise<void>
+
+    /**
+     * Sets a key to given value into storage
+     * @param key
+     * @param value
+     */
+    async set(key: string, value: any): Promise<void>
+
+    async set(key: any, value?: any) {
 
         this._assertKey(key);
 
@@ -84,7 +115,12 @@ export class AppStorage {
         );
     }
 
-    async assign <T extends object>(key: string, val: T) {
+    /**
+     * `Object.assign()` given value to given key
+     * @param key key to merge
+     * @param val value to merge
+     */
+    async assign <T extends object>(key: string, val: T): Promise<void> {
 
         const current = await this.get(key);
 
@@ -109,7 +145,19 @@ export class AppStorage {
         return this.set(key, current);
     }
 
-    async rm(keyOrKeys: string | string[]): Promise<void> {
+    /**
+     * Removes a single key
+     * @param key
+     */
+    async rm(key: string): Promise<void>
+
+    /**
+     * Removes the given array of keys
+     * @param keys
+     */
+    async rm(keys: string[]): Promise<void>
+
+    async rm(keyOrKeys: any) {
 
         this._assertKey(keyOrKeys[0]);
 
@@ -129,7 +177,22 @@ export class AppStorage {
         );
     }
 
-    has(keyOrKeys: string | string[]): boolean | boolean[] {
+
+    /**
+     * Returns an array of boolean values denoting
+     * whether the keys exist within the storage or not
+     * @param keys
+     */
+    has(keys: string[]): boolean[]
+
+    /**
+     * Returns whether key exists within the storage
+     * @param key
+     */
+    has(key: string): boolean
+
+
+    has(keyOrKeys: any): unknown {
 
         this._assertKey(keyOrKeys[0]);
 
@@ -143,25 +206,37 @@ export class AppStorage {
         return this.storage.hasOwnProperty(keyOrKeys);
     }
 
-    clear() {
+    /**
+     * Returns all keys scoped by prefix
+     */
+    clear(): Promise<void> {
 
         return this.rm(
             this._allKeys()
         );
     }
 
-    keys() {
+    /**
+     * Returns all keys scoped by prefix
+     */
+    keys(): string[] {
 
         return this._allKeys();
     }
 
-    async entries() {
+    /**
+     * `Object.entries()` against the entire store as an object
+     */
+    async entries () {
 
         const all = await this.get();
 
         return Object.entries(all!);
     }
 
+    /**
+     * `Object.values()` against the entire store as an object
+     */
     async values () {
 
         const all = await this.get();
@@ -171,18 +246,13 @@ export class AppStorage {
 
     get length() {
 
-        if (this.prefix) {
-
-            return this._allKeys().length
-        }
-
-        return this.storage.length;
+        return this._allKeys().length;
     }
 
 
     private throw (msg: string) {
 
-        throw new AppStorageError(msg);
+        throw new StorageError(msg);
     }
 
     private _assertKey(key: string | object) {

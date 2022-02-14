@@ -1,11 +1,30 @@
 {
   "name": "bws2",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "cjs.js",
+  "module": "es.js",
+  "cdn": "browser.js",
+  "types": "types.d.ts",
   "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "sh scripts/build.sh",
+    "test": "mocha -r esm -r ./test/_setup.js -r ts-node/register 'test/**/*.ts'",
+    "browser": "npx -y http-server . -o test"
+  },
   "devDependencies": {
-    "chai": "^4.3.6",
-    "mocha": "^9.2.0",
-    "typescript": "^4.5.5"
+    "@types/chai": "^4",
+    "@types/mocha": "^9",
+    "chai": "^4",
+    "esm": "^3.2.25",
+    "jsdom": "^19",
+    "mocha": "^9",
+    "rollup": "^2",
+    "rollup-plugin-delete": "^2",
+    "rollup-plugin-terser": "^7",
+    "rollup-plugin-typescript2": "^0.31",
+    "semantic-release": "^19",
+    "ts-node": "^10",
+    "typescript": "^4"
   }
 }

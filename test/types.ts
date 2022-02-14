@@ -1,8 +1,8 @@
 import { AppStorage } from '../src';
 
 
-const local = new AppStorage(localStorage, 'hey');
-const session = new AppStorage(sessionStorage, 'ho');
+const local = new AppStorage(global.window.localStorage, 'hey');
+const session = new AppStorage(global.window.sessionStorage, 'ho');
 
 [local, session].forEach(async storage => {
 
@@ -13,6 +13,13 @@ const session = new AppStorage(sessionStorage, 'ho');
     storage.set('a', 0);
     storage.set('a', { a: true });
     storage.set('a', [{ a: true }]);
+
+    storage.set({
+        a: true,
+        b: false,
+        c: 1,
+        d: 2
+    });
 
     storage.assign('a', {})
     storage.assign('a', [])
@@ -45,5 +52,5 @@ const session = new AppStorage(sessionStorage, 'ho');
 
     had === true;
 
-    hasMany === true; // this should error
+    hasMany === [true, true];
 })
