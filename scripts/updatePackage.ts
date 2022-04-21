@@ -7,7 +7,9 @@ import {
     module,
     cdn,
     types,
-    license
+    license,
+    author,
+    repository
 } from '../package.json';
 
 const paths = {
@@ -26,7 +28,9 @@ writeFileSync(
         module,
         cdn,
         types,
-        license
+        license,
+        author,
+        repository
     })
 );
 

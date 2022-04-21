@@ -1,5 +1,5 @@
 {
-  "name": "bws2",
+  "name": "appstorage",
   "version": "1.0.0",
   "main": "cjs.js",
   "module": "es.js",
@@ -7,6 +7,12 @@
   "types": "types.d.ts",
   "license": "MIT",
   "private": true,
+  "author": {
+    "name": "Danilo Alonso",
+    "email": "danilo@alonso.network",
+    "url": "https://github.com/damusix"
+  },
+  "repository": "git@github.com:damusix/better-web-storage.git",
   "scripts": {
     "build": "sh scripts/build.sh",
     "test": "mocha -r esm -r ./test/_setup.js -r ts-node/register 'test/**/*.ts'",

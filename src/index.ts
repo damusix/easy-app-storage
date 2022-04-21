@@ -1,12 +1,23 @@
 class StorageError extends Error {};
 
-interface StorageImplementation {
-    getItem(K: string): string | null | Promise<string | null>
-    setItem(K: string, V: string): void | Promise<void>
-    removeItem(key: string): void | Promise<void>;
-    clear(): void | Promise<void>;
-    length: number
-}
+type MaybePromise<T> = T | Promise<T>;
+
+export type StorageImplementation = {
+    clear(): MaybePromise<void>;
+    getItem(key: string): MaybePromise<string | null>;
+    removeItem(key: string): MaybePromise<void>;
+    setItem(key: string, value: string): MaybePromise<void>;
+    multiGet?(keys: string[]): Promise<[string, string][]>;
+    length: number,
+} & Record<string, string>
+
+// interface StorageImplementation {
+//     getItem(K: string): string | null | Promise<string | null>
+//     setItem(K: string, V: string): void | Promise<void>
+//     removeItem(key: string): void | Promise<void>;
+//     clear(): void | Promise<void>;
+//     length: number
+// }
 
 type JsonStringifyable = (
     null | number | string | boolean |
@@ -183,18 +194,43 @@ export class AppStorage {
      * whether the keys exist within the storage or not
      * @param keys
      */
-    has(keys: string[]): boolean[]
+    has(keys: string[]): Promise<boolean[]>
 
     /**
      * Returns whether key exists within the storage
      * @param key
      */
-    has(key: string): boolean
+    has(key: string): Promise<boolean>
 
 
-    has(keyOrKeys: any): unknown {
+    async has(keyOrKeys: any): Promise<unknown> {
 
         this._assertKey(keyOrKeys[0]);
+
+        // Handle async storage
+        if (!!this.storage.multiGet) {
+
+            let keys = [keyOrKeys];
+
+            if (Array.isArray(keyOrKeys)) {
+
+                keys = keyOrKeys;
+            }
+
+            const values = (
+
+                await this.storage.multiGet(keys)
+            ).map(([key]) => key);
+
+            const found = keys.map(key => values.indexOf(key) !== -1);
+
+            if (found.length === 1) {
+
+                return found.pop();
+            }
+
+            return found;
+        }
 
         if (Array.isArray(keyOrKeys)) {
 

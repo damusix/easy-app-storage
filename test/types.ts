@@ -47,8 +47,8 @@ const session = new AppStorage(global.window.sessionStorage, 'ho');
     const y = storage.keys();
     const z = await storage.values();
 
-    const had = storage.has('a');
-    const hasMany = storage.has(['a', 'b']);
+    const had = await storage.has('a');
+    const hasMany = await storage.has(['a', 'b']);
 
     had === true;
 
