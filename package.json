@@ -1,5 +1,5 @@
 {
-  "name": "appstorage",
+  "name": "easy-app-storage",
   "version": "1.0.0",
   "main": "cjs.js",
   "module": "es.js",
@@ -15,6 +15,7 @@
   "repository": "git@github.com:damusix/better-web-storage.git",
   "scripts": {
     "build": "sh scripts/build.sh",
+    "makePublic": "sh scripts/publish.sh",
     "test": "mocha -r esm -r ./test/_setup.js -r ts-node/register 'test/**/*.ts'",
     "browser": "npx -y http-server . -o test"
   },

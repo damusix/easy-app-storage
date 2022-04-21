@@ -1,4 +1,4 @@
-# Better Web Storage
+# Easy App Storage
 
 Simplified API for working with Local Storage, Session Storage or Async Storage. Stores anything that is `JSON.stringify`-able. This can be scoped to only a particular prefix so as to not interfere with other libraries.
 
@@ -106,8 +106,8 @@ rm(keys: string[]): Promise<void>;
 ## has
 
 ```ts
-has(keys: string[]): boolean[];
-has(key: string): boolean;
+has(keys: string[]): Promise<boolean[]>;
+has(key: string): Promise<boolean>;
 ```
 
 ## clear|reset
