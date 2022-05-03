@@ -204,6 +204,18 @@ describe('AppStorage', () => {
             expect(await store.prefixed!.length).to.equal(4);
         });
 
+        it(`${name}: Checks if it has prefixed items`, async () => {
+
+            const t1 = await store.prefixed!.has('test1');
+            const [t2, t3, t4] = await store.prefixed!.has(['test2', 'test3', 'qqq']);
+
+            expect(t1).to.be.true;
+            expect(t2).to.be.true;
+            expect(t3).to.be.true;
+            expect(t4).to.be.false;
+            expect(await store.prefixed!.length).to.equal(4);
+        });
+
         it(`${name}: Retrieves all prefixed items`, async () => {
 
             expect(await store.prefixed!.get()).to.include({

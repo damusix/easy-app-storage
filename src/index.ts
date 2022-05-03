@@ -217,6 +217,8 @@ export class AppStorage {
                 keys = keyOrKeys;
             }
 
+            keys = keys.map(k => this._key(k));
+
             const values = (
 
                 await this.storage.multiGet(keys)
@@ -235,11 +237,11 @@ export class AppStorage {
         if (Array.isArray(keyOrKeys)) {
 
             return keyOrKeys.map(
-                k => this.storage.hasOwnProperty(k)
+                k => this.storage.hasOwnProperty(this._key(k))
             )
         }
 
-        return this.storage.hasOwnProperty(keyOrKeys);
+        return this.storage.hasOwnProperty(this._key(keyOrKeys));
     }
 
     /**
