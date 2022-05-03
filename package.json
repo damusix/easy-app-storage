@@ -1,6 +1,6 @@
 {
   "name": "easy-app-storage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "cjs.js",
   "module": "es.js",
   "cdn": "browser.js",
@@ -51,7 +51,8 @@
       "@semantic-release/commit-analyzer",
       "@semantic-release/changelog",
       "@semantic-release/release-notes-generator",
-      "@semantic-release/git"
+      "@semantic-release/git",
+      "@semantic-release/npm"
     ]
   },
   "dependencies": {
