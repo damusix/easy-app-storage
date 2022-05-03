@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/damusix/better-web-storage/compare/v1.0.0...v1.0.1) (2022-05-03)
+
+
+### Bug Fixes
+
+* 🐛 use prefix with has() ([1281805](https://github.com/damusix/better-web-storage/commit/1281805974d248156720ffa4aae52e74044986b5))
+
 # 1.0.0 (2022-04-21)
 
 
