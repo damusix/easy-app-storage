@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/damusix/better-web-storage/compare/v1.0.1...v2.0.0) (2022-05-27)
+
+
+### Features
+
+* 🎸 react native, better types, drop useless ([bcf6db0](https://github.com/damusix/better-web-storage/commit/bcf6db0a2028dc95ffb5566732ca9f56304a7f70))
+
+
+### BREAKING CHANGES
+
+* 🧨 removed length attribute, keys returns a promise
+
 ## [1.0.1](https://github.com/damusix/better-web-storage/compare/v1.0.0...v1.0.1) (2022-05-03)
 
 
