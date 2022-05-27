@@ -17,23 +17,28 @@
     "build": "sh scripts/build.sh",
     "makePublic": "sh scripts/publish.sh",
     "test": "mocha -r esm -r ./test/_setup.js -r ts-node/register 'test/**/*.ts'",
-    "browser": "npx -y http-server . -o test"
+    "browser": "npx -y http-server . -o test",
+    "tdd": "nodemon -w src -w test -e ts,js -x 'yarn test'"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "^1.17.5",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/chai": "^4",
     "@types/mocha": "^9",
+    "@types/sinon": "^10.0.11",
     "chai": "^4",
     "esm": "^3.2.25",
     "jsdom": "^19",
     "mocha": "^9",
+    "nodemon": "^2.0.16",
     "rollup": "^2",
     "rollup-plugin-delete": "^2",
     "rollup-plugin-terser": "^7",
     "rollup-plugin-typescript2": "^0.31",
     "semantic-release": "^19",
+    "sinon": "^14.0.0",
     "ts-node": "^10",
     "typescript": "^4"
   },
@@ -55,6 +60,5 @@
       "@semantic-release/npm"
     ]
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }

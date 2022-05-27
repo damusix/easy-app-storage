@@ -1,5 +1,8 @@
 import { AppStorage, StorageImplementation } from '../build';
 import { expect } from 'chai';
+import { assert, createSandbox } from 'sinon';
+
+const sandbox = createSandbox();
 
 const clearStores = () => {
 
@@ -56,21 +59,19 @@ const fakeStorage = {
         return Object.entries(asyncStorage).filter(
             ([key]) => keys.includes(key)
         );
+    },
+    getAllKeys: () => {
+
+        return Promise.resolve(
+
+            Object.keys(asyncStorage)
+        );
     }
 };
 
-const asyncStorage = {} as StorageImplementation;
+const asyncStorage = {} as StorageImplementation & Record<string, string>;
 
 defineProps(asyncStorage, fakeStorage)
-Object.defineProperty(asyncStorage, 'length', {
-
-    configurable: false,
-    enumerable: false,
-    get() {
-
-        return Object.keys(asyncStorage).length;
-    }
-})
 
 
 describe('AppStorage', () => {
@@ -88,7 +89,7 @@ describe('AppStorage', () => {
     });
 
     // Test both local storage and session storage
-    const testSuites: [string, StorageImplementation][] = [
+    const testSuites: [string, StorageImplementation & Record<string, string>][] = [
         // name          storage reference
         ['LocalStorage', window.localStorage],
         ['SessionStorage', window.sessionStorage],
@@ -153,16 +154,11 @@ describe('AppStorage', () => {
             expect(await store.store.get('test')).to.not.exist;
         });
 
-        it(`${name}: Retrieves storage length`, async () => {
+        it(`${name}: Retrieves a copy of entire store`, async () => {
 
             await store.store.set('test1', true);
             await store.store.set('test2', true);
             await store.store.set('test3', true);
-
-            expect(store.store.length).to.equal(5);
-        });
-
-        it(`${name}: Retrieves a copy of entire store`, async () => {
 
             expect(await store.store.get()).to.include({
                 one: 'two',
@@ -176,8 +172,11 @@ describe('AppStorage', () => {
         it(`${name}: Clears storage`, async () => {
 
             await store.store.clear();
-            expect(store.store.length).to.equal(0);
-            expect(storage.length).to.equal(0);
+
+            const ssKeys = await store.store.keys();
+            const sKeys = await store.store.keys();
+            expect(ssKeys.length).to.equal(0);
+            expect(sKeys.length).to.equal(0);
         })
 
         it(`${name}: Sets keys using a prefix`, async () => {
@@ -200,8 +199,12 @@ describe('AppStorage', () => {
             await store.prefixed!.set('test1', true);
             await store.prefixed!.set('test2', true);
             await store.prefixed!.set('test3', true);
-            expect(await storage.length).to.equal(5);
-            expect(await store.prefixed!.length).to.equal(4);
+
+            const pKeys = await store.prefixed!.keys();
+            const sKeys = Object.keys(storage);
+
+            expect(sKeys.length).to.equal(5);
+            expect(pKeys.length).to.equal(4);
         });
 
         it(`${name}: Checks if it has prefixed items`, async () => {
@@ -213,7 +216,10 @@ describe('AppStorage', () => {
             expect(t2).to.be.true;
             expect(t3).to.be.true;
             expect(t4).to.be.false;
-            expect(await store.prefixed!.length).to.equal(4);
+
+            const pKeys = await store.prefixed!.keys();
+
+            expect(pKeys.length).to.equal(4);
         });
 
         it(`${name}: Retrieves all prefixed items`, async () => {
@@ -229,8 +235,12 @@ describe('AppStorage', () => {
         it(`${name}: Clears all prefixed items`, async () => {
 
             await store.prefixed!.clear();
-            expect(store.prefixed!.length).to.equal(0);
-            expect(storage.length).to.equal(1);
+
+            const pKeys = await store.prefixed!.keys();
+            const sKeys = Object.keys(storage);
+
+            expect(pKeys.length).to.equal(0);
+            expect(sKeys.length).to.equal(1);
         });
 
         it(`${name}: Object assigns to a current object in store`, async () => {
@@ -282,4 +292,72 @@ describe('AppStorage', () => {
         });
     });
 
+    it('handles lifecycle options', async () => {
+
+        const onBeforeSet = sandbox.fake();
+        const onAfterSet = sandbox.fake();
+        const onBeforeRemove = sandbox.fake();
+        const onAfterRemove = sandbox.fake();
+
+        const storage = new AppStorage(window.localStorage, {
+            prefix: 'hooks',
+            onBeforeSet,
+            onAfterSet,
+            onBeforeRemove,
+            onAfterRemove
+        });
+
+        await storage.set('test', true);
+
+        assert.calledWith(onBeforeSet, 'test', true);
+        assert.calledWith(onAfterSet, 'test', true);
+        sandbox.resetHistory();
+
+        const _with = {
+            everybody: 'boogaloo'
+        };
+
+        await storage.set(_with);
+
+        assert.calledWith(onBeforeSet, _with);
+        assert.calledWith(onAfterSet, _with);
+        sandbox.resetHistory();
+
+        await storage.rm('test');
+
+        assert.calledWith(onBeforeRemove, 'test');
+        assert.calledWith(onAfterRemove, 'test');
+        sandbox.resetHistory();
+
+        await storage.set({
+            a: '1',
+            b: '2',
+            c: '3'
+        });
+
+        const _rm = ['a', 'b', 'c']
+
+        await storage.rm(_rm);
+
+        assert.calledWith(onBeforeRemove, _rm);
+        assert.calledWith(onAfterRemove, _rm);
+        sandbox.resetHistory();
+
+        const _set = {
+
+            a: '1',
+            b: '2',
+            c: '3'
+        }
+
+        const _ass = { ign: 'true' };
+
+        await storage.set('ass', _set);
+        sandbox.resetHistory();
+
+        await storage.assign('ass', _ass);
+
+        assert.calledWith(onBeforeSet, 'ass', { ..._set, ..._ass });
+        assert.calledWith(onAfterSet, 'ass', { ..._set, ..._ass });
+    });
 });

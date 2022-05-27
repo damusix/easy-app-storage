@@ -4,31 +4,75 @@ type MaybePromise<T> = T | Promise<T>;
 
 export type StorageImplementation = {
     clear(): MaybePromise<void>;
-    getItem(key: string): MaybePromise<string | null>;
+    getItem(key: string, callback?: any): MaybePromise<string | null>;
     removeItem(key: string): MaybePromise<void>;
     setItem(key: string, value: string): MaybePromise<void>;
-    multiGet?(keys: string[]): Promise<[string, string][]>;
-    length: number,
-} & Record<string, string>
-
-// interface StorageImplementation {
-//     getItem(K: string): string | null | Promise<string | null>
-//     setItem(K: string, V: string): void | Promise<void>
-//     removeItem(key: string): void | Promise<void>;
-//     clear(): void | Promise<void>;
-//     length: number
-// }
+    multiGet?(keys: string[]): Promise<readonly [string, string | null][]>;
+    getAllKeys?(callback?: any): Promise<readonly string[]>;
+};
 
 type JsonStringifyable = (
     null | number | string | boolean |
     JsonStringifyable[] | { [k:string]: JsonStringifyable }
 )
 
+/**
+ * Extendible interface to document what keys exist, and
+ * the possible shape they take
+ */
+export interface StoredAppValues {}
+
+type Keys = keyof StoredAppValues;
+type Shapes<K> = K extends keyof StoredAppValues ? StoredAppValues[K] : any;
+
+export type AppStorageKeys = Keys;
+export type AppStorageShapes<K> = Shapes<K>;
+
+
+type Void = void | Promise<void>;
+
+interface onSet {
+
+    <K extends Keys>(key: K, value: Shapes<K>): Void;
+    <K extends Keys | string>(key: K, value: Shapes<K>): Void;
+    (value: StoredAppValues & Record<string, JsonStringifyable>): Void;
+}
+
+interface onRemove {
+
+    (key: Keys): Void;
+    (key: Keys[]): Void;
+}
+
+interface AppStorageOptions {
+
+    prefix?: string
+    onBeforeSet?: onSet
+    onAfterSet?: onSet
+    onBeforeRemove?: onRemove
+    onAfterRemove?: onRemove
+}
+
+const maybeCall = (fn: Function | null, args?: any[]) => {
+
+    if (fn) {
+
+        fn.apply(fn, args);
+    }
+}
+
 export class AppStorage {
 
     version = "%VERSION%";
     readonly storage: StorageImplementation;
     readonly prefix?: string
+
+    private onBeforeSet!: onSet | null
+    private onAfterSet!: onSet | null
+    private onBeforeRemove!: onRemove | null
+    private onAfterRemove!: onRemove | null
+
+    private isReactNative: boolean = false;
 
     /**
      * Same as storage.rm();
@@ -38,10 +82,28 @@ export class AppStorage {
     /** Same as storage.clear() */
     reset: AppStorage['clear'];
 
-    constructor(storage: StorageImplementation, prefix?: string) {
+    constructor(storage: StorageImplementation, prefixOrOptions?: string | AppStorageOptions) {
 
         this.storage = storage;
-        this.prefix = prefix
+
+        if (typeof prefixOrOptions === 'string') {
+
+            this.prefix = prefixOrOptions
+        }
+
+        if (typeof prefixOrOptions === 'object') {
+
+            this.prefix = prefixOrOptions.prefix;
+            this.onBeforeSet = prefixOrOptions.onBeforeSet || null;
+            this.onAfterSet = prefixOrOptions.onAfterSet || null;
+            this.onBeforeRemove = prefixOrOptions.onBeforeRemove || null;
+            this.onAfterRemove = prefixOrOptions.onAfterRemove || null;
+        }
+
+        if (!!storage.multiGet) {
+
+            this.isReactNative = true;
+        }
 
         this.remove = this.rm;
         this.reset = this.clear;
@@ -50,25 +112,125 @@ export class AppStorage {
     /**
      * Returns an object of all keys
      */
-    async get <T extends JsonStringifyable = JsonStringifyable>(): Promise<T extends object ? T : Record<string, T>>
+    async get <T = StoredAppValues>(): Promise<T>
 
     /**
      * Returns a single value from storage
      * @param key key to find
      */
-    async get <T extends JsonStringifyable = JsonStringifyable>(key: string): Promise<T>
+    async get <K extends Keys>(key: K): Promise<Shapes<K>>
+    async get <T = JsonStringifyable>(key: string): Promise<T>
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+    >(keys: [K1, K2]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>>
+    >
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+        K3 extends Keys,
+    >(keys: [K1, K2, K3]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>> &
+        Record<K3, Shapes<K3>>
+    >
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+        K3 extends Keys,
+        K4 extends Keys,
+    >(keys: [K1, K2, K3, K4]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>> &
+        Record<K3, Shapes<K3>> &
+        Record<K4, Shapes<K4>>
+    >
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+        K3 extends Keys,
+        K4 extends Keys,
+        K5 extends Keys,
+    >(keys: [K1, K2, K3, K4, K5]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>> &
+        Record<K3, Shapes<K3>> &
+        Record<K4, Shapes<K4>> &
+        Record<K5, Shapes<K5>>
+    >
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+        K3 extends Keys,
+        K4 extends Keys,
+        K5 extends Keys,
+        K6 extends Keys,
+    >(keys: [K1, K2, K3, K4, K5, K6]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>> &
+        Record<K3, Shapes<K3>> &
+        Record<K4, Shapes<K4>> &
+        Record<K5, Shapes<K5>> &
+        Record<K6, Shapes<K6>>
+    >
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+        K3 extends Keys,
+        K4 extends Keys,
+        K5 extends Keys,
+        K6 extends Keys,
+        K7 extends Keys,
+    >(keys: [K1, K2, K3, K4, K5, K6, K7]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>> &
+        Record<K3, Shapes<K3>> &
+        Record<K4, Shapes<K4>> &
+        Record<K5, Shapes<K5>> &
+        Record<K6, Shapes<K6>> &
+        Record<K7, Shapes<K7>>
+    >
+
+    async get <
+        K1 extends Keys,
+        K2 extends Keys,
+        K3 extends Keys,
+        K4 extends Keys,
+        K5 extends Keys,
+        K6 extends Keys,
+        K7 extends Keys,
+        K8 extends Keys,
+    >(keys: [K1, K2, K3, K4, K5, K6, K7, K8]): Promise<
+        Record<K1, Shapes<K1>> &
+        Record<K2, Shapes<K2>> &
+        Record<K3, Shapes<K3>> &
+        Record<K4, Shapes<K4>> &
+        Record<K5, Shapes<K5>> &
+        Record<K6, Shapes<K6>> &
+        Record<K7, Shapes<K7>> &
+        Record<K8, Shapes<K8>>
+    >
 
     /**
      * Returns an object of the keys passed
      * @param keys keys to find
      */
-    async get <T extends JsonStringifyable = JsonStringifyable>(keys: string[]): Promise<T extends object ? T : Record<string, T>>
+    async get <T = Record<string, JsonStringifyable>>(keys: string[]): Promise<T>
+
 
     async get (keyOrKeys?: any) {
 
         if (keyOrKeys === undefined) {
 
-            return this.get(this._allKeys())
+            return this.get(await this._allKeys())
         }
 
 
@@ -94,14 +256,15 @@ export class AppStorage {
      * Saves entire object by `{ key: value }`
      * @param values object to save to storage
      */
-    async set(values: object): Promise<void>
+    async set(values: Partial<StoredAppValues> & Record<string, any>): Promise<void>
 
     /**
      * Sets a key to given value into storage
      * @param key
      * @param value
      */
-    async set(key: string, value: any): Promise<void>
+    async set <K extends Keys>(key: K, value: Shapes<K>): Promise<void>
+    async set <K extends Keys | string>(key: K, value: Shapes<K>): Promise<void>
 
     async set(key: any, value?: any) {
 
@@ -109,23 +272,34 @@ export class AppStorage {
 
         if (typeof key === 'object') {
 
+            maybeCall(this.onBeforeSet, [key]);
+
             await Promise.all(
                 Object.entries(key).map(
-                    ([key, val]) => (
+                    async ([key, val]) => (
                         this.set(key, val)
                     )
                 )
             );
 
+            maybeCall(this.onAfterSet, [key]);
+
             return;
         }
 
-        return this.storage.setItem(
+        maybeCall(this.onBeforeSet, [key, value]);
+
+        await this.storage.setItem(
             this._key(key),
             JSON.stringify(value)
         );
+
+        maybeCall(this.onAfterSet, [key, value]);
     }
 
+
+    async assign <K extends Keys>(key: K, val: Partial<Shapes<K>>): Promise<void>
+    async assign <K extends Keys | string>(key: K, val: Partial<Shapes<K>>): Promise<void>
     /**
      * `Object.assign()` given value to given key
      * @param key key to merge
@@ -160,17 +334,21 @@ export class AppStorage {
      * Removes a single key
      * @param key
      */
+    async rm <K extends Keys>(key: K): Promise<void>
     async rm(key: string): Promise<void>
 
     /**
      * Removes the given array of keys
      * @param keys
      */
+    async rm(key: Keys[]): Promise<void>
     async rm(keys: string[]): Promise<void>
 
     async rm(keyOrKeys: any) {
 
         this._assertKey(keyOrKeys[0]);
+
+        maybeCall(this.onBeforeRemove, [keyOrKeys]);
 
         if (Array.isArray(keyOrKeys)) {
 
@@ -180,12 +358,16 @@ export class AppStorage {
                 )
             );
 
+            maybeCall(this.onAfterRemove, [keyOrKeys]);
+
             return
         }
 
-        return this.storage.removeItem(
+        await this.storage.removeItem(
             this._key(keyOrKeys)
         );
+
+        maybeCall(this.onAfterRemove, [keyOrKeys]);
     }
 
 
@@ -194,12 +376,14 @@ export class AppStorage {
      * whether the keys exist within the storage or not
      * @param keys
      */
+    has(keys: Keys[]): Promise<boolean[]>
     has(keys: string[]): Promise<boolean[]>
 
     /**
      * Returns whether key exists within the storage
      * @param key
      */
+    has(keys: Keys): Promise<boolean>
     has(key: string): Promise<boolean>
 
 
@@ -208,7 +392,7 @@ export class AppStorage {
         this._assertKey(keyOrKeys[0]);
 
         // Handle async storage
-        if (!!this.storage.multiGet) {
+        if (!!this.isReactNative) {
 
             let keys = [keyOrKeys];
 
@@ -221,7 +405,7 @@ export class AppStorage {
 
             const values = (
 
-                await this.storage.multiGet(keys)
+                await this.storage.multiGet!(keys)
             ).map(([key]) => key);
 
             const found = keys.map(key => values.indexOf(key) !== -1);
@@ -245,19 +429,19 @@ export class AppStorage {
     }
 
     /**
-     * Returns all keys scoped by prefix
+     * Removes all prefixed values from the storage
      */
-    clear(): Promise<void> {
+    async clear(): Promise<void> {
 
-        return this.rm(
-            this._allKeys()
+        await this.rm(
+            await this._allKeys()
         );
     }
 
     /**
      * Returns all keys scoped by prefix
      */
-    keys(): string[] {
+    keys() {
 
         return this._allKeys();
     }
@@ -282,12 +466,6 @@ export class AppStorage {
         return Object.values(all!);
     }
 
-    get length() {
-
-        return this._allKeys().length;
-    }
-
-
     private throw (msg: string) {
 
         throw new StorageError(msg);
@@ -311,9 +489,14 @@ export class AppStorage {
         return key;
     }
 
-    private _allKeys() {
+    private async _allKeys() {
 
         let keys = Object.keys(this.storage);
+
+        if (this.isReactNative) {
+
+            keys = [...(await this.storage.getAllKeys!())];
+        }
 
         if (this.prefix) {
 
